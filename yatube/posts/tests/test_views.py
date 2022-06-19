@@ -94,42 +94,30 @@ class TestsPostPages(TestCase):
     def test_post_index_page_show_correct_context(self):
         response = self.guest_client.get(reverse('posts:index'))
         first_object = response.context['page_obj'][0]
-        text_0 = first_object.text
-        author_0 = first_object.author.username
-        group_0 = first_object.group.title
-        image_0 = first_object.image
-        self.assertEqual(author_0, 'Nekrasov')
-        self.assertEqual(text_0, 'Тестовый пост 16')
-        self.assertEqual(group_0, 'Тестовая группа')
-        self.assertEqual(image_0, TestsPostPages.posts[0].image)
+        self.assertEqual(first_object.author.username, 'Nekrasov')
+        self.assertEqual(first_object.text, 'Тестовый пост 16')
+        self.assertEqual(first_object.group.title, 'Тестовая группа')
+        self.assertEqual(first_object.image, TestsPostPages.posts[0].image)
 
     def test_post_group_posts_page_show_correct_context(self):
         response = self.guest_client.get(
             reverse('posts:group_posts', kwargs={'slug': self.group.slug})
         )
         first_object = response.context['page_obj'][0]
-        text_0 = first_object.text
-        author_0 = first_object.author.username
-        group_0 = first_object.group.title
-        image_0 = first_object.image
-        self.assertEqual(author_0, 'Nekrasov')
-        self.assertEqual(text_0, 'Тестовый пост 16')
-        self.assertEqual(group_0, 'Тестовая группа')
-        self.assertEqual(image_0, TestsPostPages.posts[0].image)
+        self.assertEqual(first_object.author.username, 'Nekrasov')
+        self.assertEqual(first_object.text, 'Тестовый пост 16')
+        self.assertEqual(first_object.group.title, 'Тестовая группа')
+        self.assertEqual(first_object.image, TestsPostPages.posts[0].image)
 
     def test_post_profile_page_show_correct_context(self):
         response = self.guest_client.get(
             reverse('posts:profile', kwargs={'username': self.user_author})
         )
         first_object = response.context['page_obj'][0]
-        text_0 = first_object.text
-        author_0 = first_object.author.username
-        group_0 = first_object.group.title
-        image_0 = first_object.image
-        self.assertEqual(author_0, 'Nekrasov')
-        self.assertEqual(text_0, 'Тестовый пост 16')
-        self.assertEqual(group_0, 'Тестовая группа')
-        self.assertEqual(image_0, TestsPostPages.posts[0].image)
+        self.assertEqual(first_object.author.username, 'Nekrasov')
+        self.assertEqual(first_object.text, 'Тестовый пост 16')
+        self.assertEqual(first_object.group.title, 'Тестовая группа')
+        self.assertEqual(first_object.image, TestsPostPages.posts[0].image)
 
     def test_post_detail_page_show_correct_context(self):
         response = self.guest_client.get(
@@ -287,7 +275,7 @@ class CommentViewsTest(TestCase):
         response = self.authorized_client.get(
             reverse(
                 'posts:post_detail',
-                kwargs={'post_id': f'{CommentViewsTest.post.id}'}
+                kwargs={'post_id': self.post.pk}
             )
         )
         first_object = response.context.get('comment')[0]
@@ -328,16 +316,16 @@ class FollowViewsTest(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.author)
 
-        self.user_1 = User.objects.create_user(username='HasNoName1')
+        self.user = User.objects.create_user(username='HasNoName1')
         self.authorized_client_not_author_1 = Client()
-        self.authorized_client_not_author_1.force_login(self.user_1)
+        self.authorized_client_not_author_1.force_login(self.user)
 
-        self.user_2 = User.objects.create_user(username='HasNoName2')
+        self.other_user = User.objects.create_user(username='HasNoName2')
         self.authorized_client_not_author_2 = Client()
-        self.authorized_client_not_author_2.force_login(self.user_2)
+        self.authorized_client_not_author_2.force_login(self.other_user)
 
     def test_follower_view(self):
-        Follow.objects.create(user=self.user_1, author=self.author)
+        Follow.objects.create(user=self.user, author=self.author)
         new_post_author = Post.objects.create(
             text='Тестовый текст новый',
             author=self.author,
@@ -350,10 +338,10 @@ class FollowViewsTest(TestCase):
         self.assertEqual(first_object, new_post_author)
 
     def test_not_follower_view(self):
-        Follow.objects.create(user=self.user_2, author=self.user_1)
+        Follow.objects.create(user=self.other_user, author=self.user)
         Post.objects.create(
             text='Тестовый текст новый',
-            author=self.user_1,
+            author=self.user,
             group=self.group
         )
         new_post_author = Post.objects.create(
